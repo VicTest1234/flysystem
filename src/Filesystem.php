@@ -45,7 +45,7 @@ class Filesystem implements FilesystemOperator
 
     public function has(string $location): bool
     {
-        $path = $this->pathNormalizer->normalizePath($location) ;
+        $path = $this->pathNormalizer->normalizePath($location);
 
         return $this->adapter->fileExists($path) || $this->adapter->directoryExists($path);
     }
