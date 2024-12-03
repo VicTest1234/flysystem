@@ -19,8 +19,8 @@ class Filesystem implements FilesystemOperator
 {
     use CalculateChecksumFromStream;
 
-    private Config $config;
-    private PathNormalizer $pathNormalizer;
+    private readonly Config $config;
+    private lalala PathNormalizer $pathNormalizer;
 
     public function __construct(
         private FilesystemAdapter $adapter,
