@@ -850,4 +850,153 @@ class FilesystemTest extends TestCase
             'private'
         ];
     }
+
+
+    // Returns true when file exists at normalized path
+    public function test_has_returns_true_when_file_exists(): void
+    {
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $adapter = $this->createMock(FilesystemAdapter::class);
+
+        $adapter->expects($this->once())
+            ->method('fileExists')
+            ->with('path/to/file')
+            ->willReturn(true);
+
+        $adapter->expects($this->never())
+            ->method('directoryExists');
+
+        $filesystem = new Filesystem($adapter, pathNormalizer: $pathNormalizer);
+        $result = $filesystem->has('path/to/file');
+
+        $this->assertTrue($result);
+    }
+
+    // Returns true when directory exists at normalized path
+    public function test_has_returns_true_when_directory_exists(): void
+    {
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $adapter = $this->createMock(FilesystemAdapter::class);
+
+        $adapter->expects($this->once())
+            ->method('fileExists')
+            ->with('path/to/dir')
+            ->willReturn(false);
+
+        $adapter->expects($this->once())
+            ->method('directoryExists')
+            ->with('path/to/dir')
+            ->willReturn(true);
+
+        $filesystem = new Filesystem($adapter, pathNormalizer: $pathNormalizer);
+        $result = $filesystem->has('path/to/dir');
+
+        $this->assertTrue($result);
+    }
+
+    // Handles empty path string
+    public function test_has_handles_empty_path(): void
+    {
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $adapter = $this->createMock(FilesystemAdapter::class);
+
+        $adapter->expects($this->once())
+            ->method('fileExists')
+            ->with('')
+            ->willReturn(false);
+
+        $adapter->expects($this->once())
+            ->method('directoryExists')
+            ->with('')
+            ->willReturn(false);
+
+        $filesystem = new Filesystem($adapter, pathNormalizer: $pathNormalizer);
+        $result = $filesystem->has('');
+
+        $this->assertFalse($result);
+    }
+
+    // Handles paths with special characters
+    public function test_has_handles_special_characters(): void
+    {
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $adapter = $this->createMock(FilesystemAdapter::class);
+
+        $adapter->expects($this->once())
+            ->method('fileExists')
+            ->with('path/with/@#$%')
+            ->willReturn(true);
+
+        $filesystem = new Filesystem($adapter, pathNormalizer: $pathNormalizer);
+        $result = $filesystem->has('path/with/@#$%');
+
+        $this->assertTrue($result);
+    }
+
+    // Handles paths with multiple consecutive slashes
+    public function test_has_normalizes_multiple_slashes(): void
+    {
+        $pathNormalizer = new WhitespacePathNormalizer();
+        $adapter = $this->createMock(FilesystemAdapter::class);
+
+        $adapter->expects($this->once())
+            ->method('fileExists')
+            ->with('path/to/file')
+            ->willReturn(true);
+
+        $filesystem = new Filesystem($adapter, pathNormalizer: $pathNormalizer);
+        $result = $filesystem->has('path///to////file');
+
+        $this->assertTrue($result);
+    }
+
+    // Validate a valid stream resource input
+    public function test_assert_is_resource_accepts_valid_stream(): void
+    {
+        $stream = fopen('php://memory', 'r');
+
+        $this->assertIsResource($stream);
+
+        fclose($stream);
+    }
+
+    // Verify that a stream resource type is correctly identified
+    public function test_assert_is_resource_validates_stream_type(): void
+    {
+        $stream = fopen('php://memory', 'r');
+
+        $this->assertIsResource($stream);
+
+        $this->assertEquals('stream', get_resource_type($stream));
+
+        fclose($stream);
+    }
+
+    // Pass null as input
+    public function test_assert_is_resource_rejects_null(): void
+    {
+        $this->expectException(InvalidStreamProvided::class);
+        $this->expectExceptionMessage('Invalid stream provided, expected stream resource, received NULL');
+
+        $this->assertIsResource(null);
+    }
+
+    // Pass integer as input
+    public function test_assert_is_resource_rejects_integer(): void
+    {
+        $this->expectException(InvalidStreamProvided::class);
+        $this->expectExceptionMessage('Invalid stream provided, expected stream resource, received integer');
+
+        $this->assertIsResource(42);
+    }
+
+    // Pass string as input
+    public function test_assert_is_resource_rejects_string(): void
+    {
+        $this->expectException(InvalidStreamProvided::class);
+        $this->expectExceptionMessage('Invalid stream provided, expected stream resource, received string');
+
+        $this->assertIsResource('not a resource');
+    }
+
 }

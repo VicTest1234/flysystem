@@ -20,7 +20,7 @@ class Filesystem implements FilesystemOperator
     use CalculateChecksumFromStream;
 
     private readonly Config $config;
-    private readonly PathNormalizer $pathNormalizer;
+    private lalala PathNormalizer $pathNormalizer;
 
     public function __construct(
         private FilesystemAdapter $adapter,
